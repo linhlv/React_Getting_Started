@@ -21,7 +21,7 @@ class Button extends Component{
   }
   */
   state = {
-    	counter : 9
+    	counter : 0
   }
   
   handleClick = ()=>{
@@ -44,16 +44,19 @@ class Button extends Component{
   };
 }
 
+
+const Result = (props)=>{
+  return (
+    <div>...</div>
+  )
+}
+
 class App extends Component {
   render() {
     return (
-      <div className="App">
-        <header className="App-header">          
-          <h1 className="App-title">Welcome</h1>
-        </header>
-        <p className="App-intro">
+      <div className="App">        
           <Button></Button>
-        </p>
+          <Result></Result>
       </div>
     );
   }
