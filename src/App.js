@@ -2,44 +2,11 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-/* Function Components
-const Button = (props)=>{
-	return (
-  	<button>Go</button>
-  );
-};
-*/
 
-/* Class Components */
 class Button extends Component{
-  /*
-  constructor(props){
-		super(props);
-    this.state = {
-    	counter : 9
-    }
-  }
-  */
-  state = {
-    	counter : 0
-  }
-  
-  handleClick = ()=>{
-  	// this === component instance
-    // this.setState({
-    // 	counter: this.state.counter+1
-    // })
-
-    this.setState((prevState)=>{
-      return {
-        counter: prevState.counter + 1
-      }
-    })
-  }
-  
 	render(){
   	return (
-    	<button onClick={this.handleClick}>{this.state.counter}</button>
+    	<button onClick={this.props.onClickFunction}>+1</button>
     );
   };
 }
@@ -47,16 +14,28 @@ class Button extends Component{
 
 const Result = (props)=>{
   return (
-    <div>...</div>
+    <div>{props.counter}</div>
   )
 }
 
 class App extends Component {
+  state = {
+      counter : 0
+  }
+
+  incrementCounter = ()=>{
+    this.setState((prevState)=>{
+      return {
+        counter: prevState.counter + 1
+      }
+    });
+  };
+
   render() {
     return (
       <div className="App">        
-          <Button></Button>
-          <Result></Result>
+          <Button onClickFunction={this.incrementCounter}></Button>
+          <Result counter={this.state.counter}></Result>
       </div>
     );
   }
