@@ -6,7 +6,9 @@ import './App.css';
 class Button extends Component{
 	render(){
   	return (
-    	<button onClick={this.props.onClickFunction}>+1</button>
+    	<button onClick={()=>{this.props.onClickFunction(this.props.incrementValue)}}>
+        +{this.props.incrementValue}
+      </button>
     );
   };
 }
@@ -23,10 +25,10 @@ class App extends Component {
       counter : 0
   }
 
-  incrementCounter = ()=>{
+  incrementCounter = (incrementValue)=>{
     this.setState((prevState)=>{
       return {
-        counter: prevState.counter + 1
+        counter: prevState.counter + incrementValue
       }
     });
   };
@@ -34,7 +36,10 @@ class App extends Component {
   render() {
     return (
       <div className="App">        
-          <Button onClickFunction={this.incrementCounter}></Button>
+          <Button onClickFunction={this.incrementCounter} incrementValue={1}></Button>
+          <Button onClickFunction={this.incrementCounter} incrementValue={5}></Button>
+          <Button onClickFunction={this.incrementCounter} incrementValue={10}></Button>
+          <Button onClickFunction={this.incrementCounter} incrementValue={100}></Button>
           <Result counter={this.state.counter}></Result>
       </div>
     );
