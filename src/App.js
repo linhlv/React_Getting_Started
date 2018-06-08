@@ -21,7 +21,7 @@ const Button = (props) =>{
 
   switch(props.answerIsCorrect){
     case true:
-      button =  <button className="btn btn-success">
+      button =  <button className="btn btn-success" onClick={props.acceptAnswer}>
           <i className="fa fa-check"/>
         </button>;
       break;
@@ -41,8 +41,15 @@ const Button = (props) =>{
   }
 
   return (
-    <div className="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+    <div className="col-xs-4 col-sm-4 col-md-4 col-lg-4 text-center">
       {button}
+      <br/>
+      <br/>
+      <button className="btn btn-warning btn-sm" 
+              onClick={props.redraw}
+              disabled={props.redraws===0}>
+        <i className="fa fa-sync"></i> {props.redraws}
+      </button>
     </div>
   );
 }
@@ -59,6 +66,10 @@ const Answer = (props)=>{
 
 const Numbers = (props)=>{
   const numberClassName = (number)=>{
+    if(props.usedNumbers.indexOf(number)>=0){
+      return 'used';
+    }
+
     if(props.selectedNumbers.indexOf(number)>=0){
       return 'selected';
     }
@@ -80,22 +91,56 @@ const Numbers = (props)=>{
 
 Numbers.list = _.range(1, 10);
 
+const DoneFrame = (props)=>{
+  return (<div>
+    <h1>{props.doneStatus}</h1>
+    <button className="btn btn-secondary" onClick={props.resetGame}>Play Again</button>
+  </div>);
+}
+
+var possibleCombinationSum = function(arr, n) {
+  if (arr.indexOf(n) >= 0) { return true; }
+  if (arr[0] > n) { return false; }
+  if (arr[arr.length - 1] > n) {
+    arr.pop();
+    return possibleCombinationSum(arr, n);
+  }
+  var listSize = arr.length, combinationsCount = (1 << listSize)
+  for (var i = 1; i < combinationsCount ; i++ ) {
+    var combinationSum = 0;
+    for (var j=0 ; j < listSize ; j++) {
+      if (i & (1 << j)) { combinationSum += arr[j]; }
+    }
+    if (n === combinationSum) { return true; }
+  }
+  return false;
+};
+
 class Game extends Component{
-  state = {
+  static initialState = ()=> ({
     selectedNumbers: [],
-    radomNumberOfStars: 1 + Math.floor(Math.random() * 9),
-    answerIsCorrect: null
-  };
+    radomNumberOfStars: Game.randomNumber(),
+    usedNumbers: [],
+    answerIsCorrect: null,
+    redraws: 5,
+    doneStatus: 'just a test'
+  });
+  
+  state = Game.initialState();
+
+  resetGame = ()=> this.setState(Game.initialState());
 
   selectNumber = (clickedNumber)=>{
     if(this.state.selectedNumbers.indexOf(clickedNumber)>=0){ return; }
     this.setState(prevState=>({
+      answerIsCorrect: null,
       selectedNumbers: prevState.selectedNumbers.concat(clickedNumber)
     }));
   };
 
   unselectNumber = (clickedNumber)=>{
     this.setState(prevState=>({
+      answerIsCorrect: null,
       selectedNumbers: prevState.selectedNumbers.filter(number=>number!==clickedNumber)
     }));
   }
@@ -107,27 +152,89 @@ class Game extends Component{
     }));
   }
 
+  acceptAnswer = ()=>{
+    this.setState(prevState =>(
+      {
+        usedNumbers: prevState.usedNumbers.concat(prevState.selectedNumbers),
+        selectedNumbers: [],
+        answerIsCorrect: null,
+        radomNumberOfStars: Game.randomNumber()
+      }      
+    ), this.updateDoneStatus);
+  }
+
+  redraw = () =>{
+    if(this.state.redraws===0){
+      return;
+    }
+
+    this.setState(prevState => ({
+      radomNumberOfStars: Game.randomNumber(),
+      answerIsCorrect:null,
+      selectedNumbers: [],
+      redraws: prevState.redraws - 1
+    }), this.updateDoneStatus)
+  }
+  
+  static randomNumber = () => {
+    return 1 + Math.floor(Math.random() * 9);
+  };  
+
+  possibleSolutions = ({randomNumberOfStars, usedNumbers})=>{
+    const possibleNumbers = _.range(1, 10).filter(number=>
+      usedNumbers.indexOf(number)===-1
+    );
+
+    return possibleCombinationSum(possibleNumbers, randomNumberOfStars);
+  } 
+
+  updateDoneStatus = ()=>{
+    this.setState(prevState => {
+      if(prevState.usedNumbers.length === 9){
+        return { doneStatus: 'Done. Nice!'}
+      }
+
+      if(prevState.redraws === 0 && !this.possibleSolutions(prevState)){
+        return {doneStatue: 'Game Over!'}
+      }
+    });
+  }
+
   render(){
     const {
       selectedNumbers, 
       radomNumberOfStars, 
-      answerIsCorrect
+      usedNumbers,
+      answerIsCorrect,
+      redraws,
+      doneStatus
     } = this.state;
 
     return (
       <div className="container-fluid">     
-        <h3>Play Nice</h3>
+        <h3>Play Nine</h3>
         <hr/>
         <div className="row">
           <Stars numberOfStars={radomNumberOfStars}/>
           <Button selectedNumbers={selectedNumbers}
+                  redraws={redraws}
                   checkAnswer={this.checkAnswer}
+                  acceptAnswer={this.acceptAnswer}
+                  redraw={this.redraw}
                   answerIsCorrect={answerIsCorrect}/>
           <Answer selectedNumbers={selectedNumbers}
                   unselectNumber={this.unselectNumber}/>
         </div>
         <br/>
-        <Numbers selectedNumbers={selectedNumbers} selectNumber={this.selectNumber}/>
+        {
+          doneStatus ? 
+          <DoneFrame doneStatus={doneStatus} resetGame={this.resetGame}/>:
+          <Numbers  selectedNumbers={selectedNumbers} 
+                  selectNumber={this.selectNumber}
+                  usedNumbers={usedNumbers}
+          />
+        }        
+        
       </div>
     );
   }
